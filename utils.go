@@ -79,26 +79,20 @@ func Int642String(arg int64) string {
 	return strconv.FormatInt(int64(arg), 10)
 }
 
-/*
-  json string convert struct
-*/
+// JsonString2Struct json string convert struct
 func JsonString2Struct(jsonString string, result interface{}) error {
 	jsonBytes := []byte(jsonString)
 	err := json.Unmarshal(jsonBytes, result)
 	return err
 }
 
-/*
-  json byte array convert struct
-*/
+// JsonBytes2Struct json byte array convert struct
 func JsonBytes2Struct(jsonBytes []byte, result interface{}) error {
 	err := json.Unmarshal(jsonBytes, result)
 	return err
 }
 
-/*
- struct convert json string
-*/
+// Struct2JsonString struct convert json string
 func Struct2JsonString(structt interface{}) (jsonString string, err error) {
 	data, err := json.Marshal(structt)
 	if err != nil {
@@ -107,9 +101,7 @@ func Struct2JsonString(structt interface{}) (jsonString string, err error) {
 	return string(data), nil
 }
 
-/*
-  ternary operator replace language: a == b ? c : d
-*/
+// T3O ternary operator replace language: a == b ? c : d
 func T3O(condition bool, trueValue, falseValue interface{}) interface{} {
 	if condition {
 		return trueValue
@@ -117,10 +109,7 @@ func T3O(condition bool, trueValue, falseValue interface{}) interface{} {
 	return falseValue
 }
 
-/*
- Get a epoch time
-  eg: 1521221737.376
-*/
+// EpochTime Get a epoch time eg: 1521221737.376
 func EpochTime() string {
 	millisecond := time.Now().UnixNano() / 1000000
 	epoch := strconv.Itoa(int(millisecond))
@@ -129,10 +118,7 @@ func EpochTime() string {
 	return epoch
 }
 
-/*
- Get a iso time
-  eg: 2018-03-16T18:02:48.284Z
-*/
+// IsoTime Get a iso time eg: 2018-03-16T18:02:48.284Z
 func IsoTime() string {
 	utcTime := time.Now().UTC()
 	iso := utcTime.String()
@@ -141,9 +127,7 @@ func IsoTime() string {
 	return iso
 }
 
-/*
- Get utc +8 -- 1540365300000 -> 2018-10-24 15:15:00 +0800 CST
-*/
+// LongTimeToUTC8 Get utc +8 -- 1540365300000 -> 2018-10-24 15:15:00 +0800 CST
 func LongTimeToUTC8(longTime int64) time.Time {
 	timeString := Int64ToString(longTime)
 	sec := timeString[0:10]
@@ -151,17 +135,12 @@ func LongTimeToUTC8(longTime int64) time.Time {
 	return time.Unix(StringToInt64(sec), StringToInt64(nsec))
 }
 
-/*
- 1540365300000 -> 2018-10-24 15:15:00
-*/
+// LongTimeToUTC8Format 1540365300000 -> 2018-10-24 15:15:00
 func LongTimeToUTC8Format(longTime int64) string {
 	return LongTimeToUTC8(longTime).Format("2006-01-02 15:04:05")
 }
 
-/*
-  iso time change to time.Time
-  eg: "2018-11-18T16:51:55.933Z" -> 2018-11-18 16:51:55.000000933 +0000 UTC
-*/
+// IsoToTime iso time change to time.Time eg: "2018-11-18T16:51:55.933Z" -> 2018-11-18 16:51:55.000000933 +0000 UTC
 func IsoToTime(iso string) (time.Time, error) {
 	nilTime := time.Now()
 	if iso == "" {
@@ -200,9 +179,7 @@ func IsoToTime(iso string) (time.Time, error) {
 	return time.Date(year, time.Month(month), day, hour, min, sec, nsec, time.UTC), nil
 }
 
-/*
- Get a http request body is a json string and a byte array.
-*/
+// ParseRequestParams Get a http request body is a json string and a byte array.
 func ParseRequestParams(params interface{}) (string, *bytes.Reader, error) {
 	if params == nil {
 		return "", nil, errors.New("illegal parameter")
@@ -236,9 +213,7 @@ func Headers(request *http.Request, config Config, timestamp string, sign string
 	request.Header.Add(OK_ACCESS_PASSPHRASE, config.Passphrase)
 }
 
-/*
- Get a new map.eg: {string:string}
-*/
+// NewParams Get a new map.eg: {string:string}
 func NewParams() map[string]string {
 	return make(map[string]string)
 }
@@ -306,9 +281,7 @@ func GetResponsePageJsonString(response *http.Response) string {
 	return response.Header.Get(ResultPageJsonString)
 }
 
-/*
-  ternary operator biz extension
-*/
+// T3Ox ternary operator biz extension
 func T3Ox(err error, value interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
@@ -316,9 +289,7 @@ func T3Ox(err error, value interface{}) (interface{}, error) {
 	return value, nil
 }
 
-/*
-  return decimalism string 9223372036854775807 -> "9223372036854775807"
-*/
+// Int64ToString return decimalism string 9223372036854775807 -> "9223372036854775807"
 func Int64ToString(arg int64) string {
 	return strconv.FormatInt(arg, 10)
 }
@@ -345,9 +316,7 @@ func StringToInt(arg string) int {
 	}
 }
 
-/*
-  call fmt.Println(...)
-*/
+// FmtPrintln call fmt.Println(...)
 func FmtPrintln(flag string, info interface{}) {
 	fmt.Print(flag)
 	if info != nil {
