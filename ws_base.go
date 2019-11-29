@@ -27,6 +27,7 @@ type SubscribeResponse struct {
 	Result []interface{} `json:"params"`
 }
 
+// Ticker Ticker 数据结构
 type Ticker struct {
 	Period      int    `json:"period"`
 	Open        string `json:"open"`
@@ -39,6 +40,7 @@ type Ticker struct {
 	BaseVolume  string `json:"baseVolume"`
 }
 
+// Trade 交易数据结构
 type Trade struct {
 	ID     int     `json:"id"`
 	Time   float64 `json:"time"`
@@ -47,6 +49,7 @@ type Trade struct {
 	Type   string  `json:"type"`
 }
 
+// KLine K线数据结构
 type KLine struct {
 	Time   float64 `json:"time"`
 	Open   string  `json:"open"`

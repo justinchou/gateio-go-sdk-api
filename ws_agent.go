@@ -15,6 +15,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// WSSID Wss Client ID
 const WSSID = 20191129
 
 // GateWSAgent GateIO Wss 客户端
