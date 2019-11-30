@@ -62,6 +62,30 @@ func (gwa *GateWSAgent) Start(config *Config) (err error) {
 	return nil
 }
 
+// Subscribe 订阅
+func (gwa *GateWSAgent) Subscribe(channel string, params []interface{}, cb ReceivedDataCallback) (err error) {
+	gwa.processMutex.Lock()
+	defer gwa.processMutex.Unlock()
+
+	err = gwa.sendMsg(channel, params)
+	if err != nil {
+		return err
+	}
+
+	cbs := gwa.SubscribeMap[channel]
+	if cbs == nil {
+		cbs = []ReceivedDataCallback{}
+		gwa.ActiveChannels[channel] = false
+	}
+
+	if cb != nil {
+		cbs = append(cbs, cb)
+		gwa.SubscribeMap[channel] = cbs
+	}
+
+	return nil
+}
+
 func (gwa *GateWSAgent) work() {
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
@@ -87,11 +111,46 @@ func (gwa *GateWSAgent) work() {
 	}
 }
 
-// SendMessage 客户端向服务器发送数据结构体
-type SendMessage struct {
-	ID     int64         `json:"id"`
-	Method string        `json:"method"`
-	Params []interface{} `json:"params"`
+func (gwa *GateWSAgent) receive() {
+	defer func() {
+		a := recover()
+		if a != nil {
+			log.Printf("Receive End. Recover msg: %+v", a)
+			debug.PrintStack()
+		}
+	}()
+
+	for {
+		messageType, message, err := gwa.Conn.ReadMessage()
+		if err != nil {
+			gwa.ErrorCh <- err
+			break
+		}
+
+		txtMsg := message
+		switch messageType {
+		case websocket.TextMessage:
+		case websocket.BinaryMessage:
+			txtMsg, err = gwa.gzipDecode(message)
+		}
+
+		if gwa.Config.IsPrint {
+			fmt.Println("recv msg type", messageType, "message", string(txtMsg), "err", err)
+		}
+
+		resp, err := loadResponse(txtMsg)
+		if err != nil {
+			gwa.ErrorCh <- err
+			break
+		}
+
+		switch resp.(type) {
+		case *SubscribeResponse:
+			gwa.SubscribeResp <- resp.(*SubscribeResponse)
+		case *QueryResponse:
+			gwa.QueryResp <- resp.(*QueryResponse)
+		}
+	}
 }
 
 func (gwa *GateWSAgent) sendMsg(channel string, params []interface{}) (err error) {
@@ -246,76 +305,10 @@ func (gwa *GateWSAgent) handleQuery(msg *QueryResponse) (err error) {
 	return nil
 }
 
-// Subscribe 订阅
-func (gwa *GateWSAgent) Subscribe(channel string, params []interface{}, cb ReceivedDataCallback) (err error) {
-	gwa.processMutex.Lock()
-	defer gwa.processMutex.Unlock()
-
-	err = gwa.sendMsg(channel, params)
-	if err != nil {
-		return err
-	}
-
-	cbs := gwa.SubscribeMap[channel]
-	if cbs == nil {
-		cbs = []ReceivedDataCallback{}
-		gwa.ActiveChannels[channel] = false
-	}
-
-	if cb != nil {
-		cbs = append(cbs, cb)
-		gwa.SubscribeMap[channel] = cbs
-	}
-
-	return nil
-}
-
-// GzipDecode 解压缩通过 Gzip 压缩过的数据
-func (gwa *GateWSAgent) GzipDecode(in []byte) ([]byte, error) {
+// gzipDecode 解压缩通过 Gzip 压缩过的数据
+func (gwa *GateWSAgent) gzipDecode(in []byte) ([]byte, error) {
 	reader := flate.NewReader(bytes.NewReader(in))
 	defer reader.Close()
 
 	return ioutil.ReadAll(reader)
-}
-
-func (gwa *GateWSAgent) receive() {
-	defer func() {
-		a := recover()
-		if a != nil {
-			log.Printf("Receive End. Recover msg: %+v", a)
-			debug.PrintStack()
-		}
-	}()
-
-	for {
-		messageType, message, err := gwa.Conn.ReadMessage()
-		if err != nil {
-			gwa.ErrorCh <- err
-			break
-		}
-
-		txtMsg := message
-		switch messageType {
-		case websocket.TextMessage:
-		case websocket.BinaryMessage:
-			txtMsg, err = gwa.GzipDecode(message)
-		}
-
-		if gwa.Config.IsPrint {
-			fmt.Println("recv msg type", messageType, "message", string(txtMsg), "err", err)
-		}
-
-		resp, err := loadResponse(txtMsg)
-		if err != nil {
-			gwa.ErrorCh <- err
-			break
-		}
-
-		switch resp.(type) {
-		case *SubscribeResponse:
-			gwa.SubscribeResp <- resp.(*SubscribeResponse)
-		case *QueryResponse:
-			gwa.QueryResp <- resp.(*QueryResponse)
-		}
-	}
 }

@@ -2,6 +2,13 @@ package gateio
 
 import "fmt"
 
+// SendMessage 客户端向服务器发送数据结构体
+type SendMessage struct {
+	ID     int64         `json:"id"`
+	Method string        `json:"method"`
+	Params []interface{} `json:"params"`
+}
+
 // ErrMsg 错误格式
 type ErrMsg struct {
 	Code    int64  `json:"code"`
@@ -25,6 +32,11 @@ type SubscribeResponse struct {
 	ID     int64         `json:"id"`
 	Method string        `json:"method"`
 	Result []interface{} `json:"params"`
+}
+
+// Valid 检验对象是否合法
+func (t *SubscribeResponse) Valid() bool {
+	return len(t.Method) > 0 && t.Result != nil
 }
 
 // Ticker Ticker 数据结构
@@ -59,11 +71,6 @@ type KLine struct {
 	Volume string  `json:"volume"`
 	Amount string  `json:"amount"`
 	Symbol string  `json:"symbol"`
-}
-
-// Valid 检验对象是否合法
-func (t *SubscribeResponse) Valid() bool {
-	return len(t.Method) > 0 && t.Result != nil
 }
 
 func loadResponse(msg []byte) (interface{}, error) {
